@@ -1,23 +1,28 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Enemy : MonoBehaviour
 {
-    public float health = 100f;
+    public float maxHealth = 100;
+    float currentHealth;
 
-    public void TakeDamage(float amount)
+    public Image Fill;
+
+    void Start()
     {
-        health -= amount;
-        Debug.Log("Enemy HP: " + health);
-
-        if (health <= 0f)
-        {
-            Die();
-        }
+        currentHealth = maxHealth;
+        Fill.fillAmount = 1f;
     }
 
-    void Die()
+    public void TakeDamage(float damage)
     {
-        Debug.Log("Enemy Dead");
-        Destroy(gameObject);
+        currentHealth -= damage;
+
+        Fill.fillAmount = currentHealth / maxHealth;
+
+        if (currentHealth <= 0)
+        {
+            Destroy(gameObject);
+        }
     }
 }

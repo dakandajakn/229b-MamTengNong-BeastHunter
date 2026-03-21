@@ -5,7 +5,7 @@ public class PlayerMovement : MonoBehaviour
     public float moveSpeed = 5f;
     public Transform cameraTransform;
     public Animator anim;
-
+    
     void Update()
     {
         float moveX = Input.GetAxis("Horizontal");

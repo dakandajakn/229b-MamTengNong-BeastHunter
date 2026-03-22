@@ -1,75 +1,96 @@
-using UnityEngine; 
+using UnityEngine;
+using UnityEngine.AI;
 
-public class EnemyAI : MonoBehaviour // สร้าง Script EnemyAI ให้ใช้กับ Enemy
+public class EnemyAI : MonoBehaviour
 {
-    public Transform player; // เก็บตำแหน่ง Player เพื่อให้มอนรู้ว่าผู้เล่นอยู่ตรงไหน
+    public Transform player;
 
-    public float speed = 3f; // ความเร็วเดินของมอน
-    public float chaseDistance = 10f; // ระยะที่มอนจะเริ่มเดินตาม
-    public float attackDistance = 1f; // ระยะที่มอนจะเริ่มโจมตี
+    public float chaseDistance = 10f;   // ระยะเห็นผู้เล่น
+    public float attackDistance = 1.5f; // ระยะตี
 
-    public float attackCooldown = 1.5f; // เวลาหน่วงการตี (ตีทุก 1.5 วินาที)
-    float attackTimer; // ตัวแปรจับเวลา
+    public float patrolRadius = 8f;     // เดินสุ่มไกลแค่ไหน
+    public float patrolDelay = 3f;      // เปลี่ยนจุดทุกกี่วิ
 
-    public int damage = 10; // ดาเมจที่มอนจะตีใส่ Player
+    public float attackCooldown = 1.5f; // เวลารอการตี
+    float attackTimer;
 
-    Animator anim; // ตัวแปรเก็บ Animator เพื่อควบคุม Animation
+    NavMeshAgent agent;
+    Animator anim;
 
-    void Start() // ทำงานครั้งเดียวตอนเริ่มเกม
+    float patrolTimer;
+    Vector3 patrolPoint;
+
+    void Start()
     {
-        anim = GetComponent<Animator>(); // หา Animator จาก Enemy แล้วเก็บไว้
+        agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
+
+        patrolPoint = transform.position; // เริ่มจากจุดเดิม
     }
 
-    void Update() // ทำงานทุกเฟรม
+    void Update()
     {
-        // คำนวณระยะห่างระหว่าง Enemy กับ Player
         float distance = Vector3.Distance(transform.position, player.position);
 
-        attackTimer += Time.deltaTime; // นับเวลาเพิ่มทุกเฟรม
+        attackTimer += Time.deltaTime;
 
-        // ถ้า Player อยู่ในระยะไล่
+        // 👁 เห็นผู้เล่น
         if (distance <= chaseDistance)
         {
-            transform.LookAt(player); // ให้มอนหันหน้าไปหาผู้เล่น
-
-            // ถ้า Player ยังอยู่ไกลกว่าระยะตี
+            // 🏃 ไล่
             if (distance > attackDistance)
             {
-                // ให้มอนเดินไปหาผู้เล่น
-                transform.position = Vector3.MoveTowards(
-                    transform.position,
-                    player.position,
-                    speed * Time.deltaTime
-                );
+                agent.isStopped = false;
+                agent.SetDestination(player.position);
 
-                anim.SetBool("Run", true); // เล่น Animation วิ่ง
+                anim.SetBool("Run", true);
             }
+            // 💥 ตี
             else
             {
-                anim.SetBool("Run", false); // หยุดวิ่ง
+                agent.isStopped = true;
 
-                // ถ้าถึงเวลาตี
+                transform.LookAt(player);
+
+                anim.SetBool("Run", false);
+
                 if (attackTimer >= attackCooldown)
                 {
-                    anim.SetTrigger("Attack"); // เล่น Animation ตี
-
-                    AttackPlayer(); // เรียกฟังก์ชันตี Player
-
-                    attackTimer = 0f; // รีเซ็ตเวลา
+                    anim.SetTrigger("Attack");
+                    AttackPlayer();
+                    attackTimer = 0f;
                 }
             }
         }
+        // 🌲 ไม่เห็น → เดินสุ่ม
         else
         {
-            anim.SetBool("Run", false); // ถ้า Player ไกลให้หยุด
+            Patrol();
         }
     }
 
-    // ฟังก์ชันตี Player
+    void Patrol()
+    {
+        patrolTimer += Time.deltaTime;
+
+        // ถ้าถึงจุด หรือ ครบเวลา → สุ่มใหม่
+        if (Vector3.Distance(transform.position, patrolPoint) < 1f || patrolTimer >= patrolDelay)
+        {
+            Vector3 randomPos = transform.position + Random.insideUnitSphere * patrolRadius;
+            randomPos.y = transform.position.y;
+
+            patrolPoint = randomPos;
+            patrolTimer = 0f;
+        }
+
+        agent.isStopped = false;
+        agent.SetDestination(patrolPoint);
+
+        anim.SetBool("Run", true);
+    }
+
     void AttackPlayer()
     {
-        // ไปเรียก Script PlayerHealth
-        // แล้วลด HP ตาม damage
-        player.GetComponent<PlayerHealth>().TakeDamage(damage);
+        player.GetComponent<PlayerHealth>().TakeDamage(10);
     }
 }

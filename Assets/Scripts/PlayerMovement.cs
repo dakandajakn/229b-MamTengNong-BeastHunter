@@ -10,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
     {
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
+        float mouseX = Input.GetAxis("Mouse X") * 200f * Time.deltaTime;
+        transform.Rotate(Vector3.up * mouseX);
 
         Vector3 forward = cameraTransform.forward;
         Vector3 right = cameraTransform.right;

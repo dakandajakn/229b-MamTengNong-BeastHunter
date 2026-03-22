@@ -2,17 +2,19 @@ using UnityEngine;
 
 public class GunShoot : MonoBehaviour
 {
- 
     public float damage = 20f;
     public float range = 100f;
+
     public Camera fpsCam;
     public Animator anim;
     public GameObject Effects;
-    public float knockbackForce = 2f; // เพิ่มแรงกระเด็น
+
+    public Transform firePoint; // จุดยิง (จุดเขียว)
+    public float knockbackForce = 2f;
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0)) // คลิกซ้ายยิง
+        if (Input.GetMouseButtonDown(0))
         {
             Shoot();
         }
@@ -20,12 +22,37 @@ public class GunShoot : MonoBehaviour
 
     void Shoot()
     {
-        RaycastHit hit;
         anim.Play("Attack01");
-        if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
+
+        // ❗ ไม่ให้ยิงโดน Player
+        int layerMask = ~LayerMask.GetMask("Player");
+
+        RaycastHit hit;
+
+        // 🎯 ยิงจากกลางจอ
+        Ray ray = fpsCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+
+        Vector3 targetPoint;
+
+        if (Physics.Raycast(ray, out hit, range, layerMask))
+        {
+            targetPoint = hit.point;
+        }
+        else
+        {
+            targetPoint = ray.GetPoint(range);
+        }
+
+        // 💥 เอฟเฟคที่จุดโดน
+        Instantiate(Effects, targetPoint, Quaternion.identity);
+
+        // 🔫 คำนวณทิศยิงจากตัวละคร
+        Vector3 direction = (targetPoint - firePoint.position).normalized;
+
+        // 🔍 ยิงจริงอีกทีจาก firePoint
+        if (Physics.Raycast(firePoint.position, direction, out hit, range, layerMask))
         {
             Debug.Log("Hit: " + hit.transform.name);
-            Instantiate(Effects, hit.point, Quaternion.identity);
 
             Enemy enemy = hit.transform.GetComponent<Enemy>();
             if (enemy != null)
@@ -36,19 +63,8 @@ public class GunShoot : MonoBehaviour
             EnemyKnockback knockback = hit.transform.GetComponentInParent<EnemyKnockback>();
             if (knockback != null)
             {
-                knockback.ApplyKnockback(fpsCam.transform.forward, knockbackForce);
+                knockback.ApplyKnockback(direction, knockbackForce);
             }
-        
-            EnemyKnockback monster = hit.collider.GetComponent<EnemyKnockback>();
-
-            if (monster != null)
-            {
-                Vector3 hitDir = hit.collider.transform.position - transform.position;
-                monster.ApplyKnockback(hitDir, knockbackForce);
-            }
-
         }
-       
-        
     }
 }

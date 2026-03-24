@@ -49638,7 +49638,7 @@ MonoBehaviour:
   range: 100
   fpsCam: {fileID: 963194227}
   anim: {fileID: 435655713}
-  Effects: {fileID: 3946238983612085741, guid: 2dce1c5a43bfb1f48a9a6415548f5886, type: 3}
+  effects: {fileID: 3946238983612085741, guid: 2dce1c5a43bfb1f48a9a6415548f5886, type: 3}
   firePoint: {fileID: 1508079715}
   knockbackForce: 8
 --- !u!114 &435655717

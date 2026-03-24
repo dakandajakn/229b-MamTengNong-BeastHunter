@@ -7,9 +7,9 @@ public class GunShoot : MonoBehaviour
 
     public Camera fpsCam;
     public Animator anim;
-    public GameObject Effects;
+    public GameObject effects;
 
-    public Transform firePoint; // จุดยิง (จุดเขียว)
+    public Transform firePoint;
     public float knockbackForce = 2f;
 
     void Update()
@@ -22,16 +22,21 @@ public class GunShoot : MonoBehaviour
 
     void Shoot()
     {
-        anim.Play("Attack01");
+        if (fpsCam == null || firePoint == null)
+        {
+            Debug.LogWarning("GunShoot: fpsCam หรือ firePoint ยังไม่ได้ใส่ใน Inspector");
+            return;
+        }
 
-        // ❗ ไม่ให้ยิงโดน Player
+        if (anim != null)
+        {
+            anim.Play("Attack01");
+        }
+
         int layerMask = ~LayerMask.GetMask("Player");
 
         RaycastHit hit;
-
-        // 🎯 ยิงจากกลางจอ
-        Ray ray = fpsCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-
+        Ray ray = fpsCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         Vector3 targetPoint;
 
         if (Physics.Raycast(ray, out hit, range, layerMask))
@@ -43,13 +48,13 @@ public class GunShoot : MonoBehaviour
             targetPoint = ray.GetPoint(range);
         }
 
-        // 💥 เอฟเฟคที่จุดโดน
-        Instantiate(Effects, targetPoint, Quaternion.identity);
+        if (effects != null)
+        {
+            Instantiate(effects, targetPoint, Quaternion.identity);
+        }
 
-        // 🔫 คำนวณทิศยิงจากตัวละคร
         Vector3 direction = (targetPoint - firePoint.position).normalized;
 
-        // 🔍 ยิงจริงอีกทีจาก firePoint
         if (Physics.Raycast(firePoint.position, direction, out hit, range, layerMask))
         {
             Debug.Log("Hit: " + hit.transform.name);
@@ -58,6 +63,13 @@ public class GunShoot : MonoBehaviour
             if (enemy != null)
             {
                 enemy.TakeDamage(damage);
+            }
+
+            DragonHealth dragon = hit.transform.GetComponentInParent<DragonHealth>();
+            if (dragon != null)
+            {
+                Debug.Log("โดนมังกรแล้ว!");
+                dragon.TakeDamage(damage);
             }
 
             EnemyKnockback knockback = hit.transform.GetComponentInParent<EnemyKnockback>();

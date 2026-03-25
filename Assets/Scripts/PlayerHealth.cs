@@ -1,36 +1,41 @@
 using UnityEngine;
-using UnityEngine.UI; // ใช้ควบคุม UI HP Bar
+using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
-    public float maxHP = 100; // HP สูงสุด
-    public float currentHP; // HP ปัจจุบัน
+    public float maxHP = 100f;
+    private float currentHP;
 
-    public Slider hpBar; // UI HP Bar
+    public Image hpFill; // ✅ เปลี่ยนเป็น Image
 
     void Start()
     {
-        currentHP = maxHP; // เริ่มเกม HP เต็ม
+        currentHP = maxHP;
 
-        hpBar.maxValue = maxHP; // ตั้งค่า Max HP Bar
-        hpBar.value = currentHP; // ตั้งค่า HP ปัจจุบัน
+        if (hpFill != null)
+            hpFill.fillAmount = 1f;
     }
 
-    // ฟังก์ชันลด HP
     public void TakeDamage(float damage)
     {
-        currentHP -= damage; // ลด HP
+        currentHP -= damage;
+        currentHP = Mathf.Clamp(currentHP, 0f, maxHP);
 
-        hpBar.value = currentHP; // อัพเดต HP Bar
+        float percent = currentHP / maxHP;
+
+        if (hpFill != null)
+            hpFill.fillAmount = percent;
+
+        Debug.Log("❤️ Player HP: " + currentHP);
 
         if (currentHP <= 0)
         {
-            Die(); // ถ้า HP หมด
+            Die();
         }
     }
 
     void Die()
     {
-        Debug.Log("Game Over"); // แสดง Game Over
+        Debug.Log("💀 Game Over");
     }
 }

@@ -11,6 +11,8 @@ public class GunShoot : MonoBehaviour
 
     public Transform firePoint;
     public float knockbackForce = 2f;
+    public AudioSource audioSource;
+    public AudioClip shootSound;
 
     void Update()
     {
@@ -22,6 +24,11 @@ public class GunShoot : MonoBehaviour
 
     void Shoot()
     {
+        if (audioSource != null && shootSound != null)
+        {
+            audioSource.PlayOneShot(shootSound);
+        }
+
         if (fpsCam == null || firePoint == null)
         {
             Debug.LogWarning("GunShoot: fpsCam หรือ firePoint ยังไม่ได้ใส่ใน Inspector");

@@ -1,37 +1,41 @@
 ﻿using UnityEngine;
-using UnityEngine.AI; // ใช้ NavMesh
+using UnityEngine.AI; 
+
 
 public class EnemyKnockback : MonoBehaviour
 {
-    private Rigidbody rb;
-    private NavMeshAgent agent;
+    private Rigidbody rb;        // ใช้ฟิสิกส์ในการผลัก
+    private NavMeshAgent agent;  // ใช้ควบคุมการเดิน AI
 
     void Awake()
     {
-        rb = GetComponent<Rigidbody>(); // ดึง Rigidbody
+        rb = GetComponent<Rigidbody>();       // ดึง Rigidbody จากตัวศัตรู
         agent = GetComponent<NavMeshAgent>(); // ดึง NavMeshAgent (ถ้ามี)
     }
 
+    //  ฟังก์ชันโดนยิงแล้วกระเด็น
     public void ApplyKnockback(Vector3 shootDirection, float force)
     {
-        if (rb == null) return;
+        if (rb == null) return; // ถ้าไม่มี Rigidbody → ทำอะไรไม่ได้
 
-        // 🔥 ปิด NavMesh ชั่วคราว (ไม่งั้นมันดึงกลับ)
+        //  ปิด NavMesh ชั่วคราว
+        // เพราะ NavMesh จะพยายาม "ดึงตัวกลับ" ทำให้ไม่กระเด็น
         if (agent != null)
         {
             agent.enabled = false;
         }
 
-        // รีเซ็ตความเร็วก่อน
+        //  รีเซ็ตความเร็วเดิมก่อน (กันแรงสะสม)
         rb.velocity = Vector3.zero;
 
-        // ใส่แรงกระเด็น
+        //  ใส่แรงกระเด็นไปตามทิศที่ยิง
         rb.AddForce(shootDirection.normalized * force, ForceMode.Impulse);
 
-        // เปิด NavMesh กลับหลังจาก 0.5 วิ
+        //  รอ 0.5 วิ แล้วเปิด NavMesh กลับ
         Invoke(nameof(EnableAgent), 0.5f);
     }
 
+    //  เปิด NavMesh กลับมาใช้งาน
     void EnableAgent()
     {
         if (agent != null)
